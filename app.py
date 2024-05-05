@@ -115,8 +115,7 @@ if submitted:
         st.error(
             "Please make sure that wickets lost in last 5 overs are less than or equal to total wickets lost")
     else:
-        st.markdown(f"# **Predicted runs are: {score_predict(batting_team=bat_team, bowling_team=bowl, runs=runs, wickets=wickets, overs=str_format(
-            overs_slider), runs_last_5=last5_rus, wickets_last_5=last5_wickets, fours=fours, sixes=sixes, city=city, bowling_first=bowling_first)}**")
+        st.markdown(f"# **Predicted runs are: {score_predict(batting_team=bat_team, bowling_team=bowl, runs=runs, wickets=wickets, overs=str_format(overs_slider), runs_last_5=last5_rus, wickets_last_5=last5_wickets, fours=fours, sixes=sixes, city=city, bowling_first=bowling_first)}**")
 
 st.markdown(
     "This app is inspired from the works of [Satyajit Pattnaik](https://www.youtube.com/@SatyajitPattnaik)")
