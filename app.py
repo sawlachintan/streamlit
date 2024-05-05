@@ -30,11 +30,9 @@ cities = sorted(['Mumbai', 'Pune', 'Navi Mumbai', 'Kolkata', 'Ahmedabad', 'Luckn
 
 def score_predict(batting_team,
                   bowling_team,
-                  runs, wickets, overs, runs_last_5, wickets_last_5, fours, sixes, city, model=model) -> int:
+                  runs, wickets, overs, runs_last_5, wickets_last_5, fours, sixes, city, bowling_first, model=model) -> int:
     cols = ['overs', 'runs', 'wickets', 'last5_runs', 'last5_wickets', 'fours',
-            'sixes', 'total', 'batting_team_Chennai Super Kings',
-            'batting_team_Delhi Capitals', 'batting_team_Gujarat Titans',
-            'batting_team_Kolkata Knight Riders',
+            'sixes', 'batting_first', 'bowling_first', 'batting_team_Chennai Super Kings', 'batting_team_Delhi Capitals', 'batting_team_Gujarat Titans', 'batting_team_Kolkata Knight Riders',
             'batting_team_Lucknow Super Giants', 'batting_team_Mumbai Indians',
             'batting_team_Punjab Kings', 'batting_team_Rajasthan Royals',
             'batting_team_Royal Challengers Bengaluru',
@@ -50,7 +48,6 @@ def score_predict(batting_team,
             'city_Lucknow', 'city_Mohali', 'city_Mumbai', 'city_Navi Mumbai',
             'city_Pune', 'city_Visakhapatnam']
     pred_array = pd.DataFrame([[0 for _ in range(len(cols))]], columns=cols)
-    pred_array.drop('total', axis=1, inplace=True)
     pred_array['overs'] = overs
     pred_array['runs'] = runs
     pred_array['wickets'] = wickets
@@ -61,6 +58,8 @@ def score_predict(batting_team,
     pred_array[f"batting_team_{batting_team}"] = 1
     pred_array[f"bowling_team_{bowling_team}"] = 1
     pred_array[f"city_{city}"] = 1
+    pred_array['bowling_first'] = 1 if bowling_first == "Batting Second" else 0
+    pred_array['batting_first'] = 0 if bowling_first == "Batting Second" else 1
 
     pred = model.predict(pred_array.values)
     return int(round(pred[0]))
@@ -69,6 +68,10 @@ def score_predict(batting_team,
 with st.form("Model inputs"):
     col1, col2 = st.columns(2)
     ba_idx, bo_idx = np.random.choice(len(teams), 2)
+    def str_format(x): return f"{x//6}.{x % 6}"
+    if "city" not in st.session_state:
+        st.session_state.city = cities[ba_idx]
+
     if "bat_team" not in st.session_state:
         st.session_state.bat_team = teams[ba_idx]
     if "bowl_team" not in st.session_state:
@@ -76,16 +79,14 @@ with st.form("Model inputs"):
     with col1:
         bat_team = st.selectbox(
             'Batting Team', teams, key="bat_team")
+        city = st.selectbox('city', cities, key="city")
     with col2:
         bowl = st.selectbox(
             'Bowling Team', teams, key="bowl_team")
+        bowling_first = st.radio("Which innings is the batting team playing?", [
+                                 "Batting First", "Batting Second"])
 
     # Create a slider with the custom formatting function
-
-    def str_format(x): return f"{x//6}.{x % 6}"
-    if "city" not in st.session_state:
-        st.session_state.city = cities[ba_idx]
-    city = st.selectbox('city', cities,key="city")
 
     overs_slider = st.select_slider("Overs", options=range(
         30, 121, 1), format_func=str_format)
@@ -114,6 +115,8 @@ if submitted:
         st.error(
             "Please make sure that wickets lost in last 5 overs are less than or equal to total wickets lost")
     else:
-        st.markdown(f"# **Predicted runs are: {score_predict(batting_team=bat_team, bowling_team=bowl, runs=runs, wickets=wickets, overs=str_format(overs_slider), runs_last_5=last5_rus, wickets_last_5=last5_wickets, fours=fours, sixes=sixes, city=city)}**")
+        st.markdown(f"# **Predicted runs are: {score_predict(batting_team=bat_team, bowling_team=bowl, runs=runs, wickets=wickets, overs=str_format(
+            overs_slider), runs_last_5=last5_rus, wickets_last_5=last5_wickets, fours=fours, sixes=sixes, city=city, bowling_first=bowling_first)}**")
 
-st.markdown("This app is inspired from the works of [Satyajit Pattnaik](https://www.youtube.com/@SatyajitPattnaik)")
+st.markdown(
+    "This app is inspired from the works of [Satyajit Pattnaik](https://www.youtube.com/@SatyajitPattnaik)")
